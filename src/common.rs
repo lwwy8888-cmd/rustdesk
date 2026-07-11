@@ -2088,6 +2088,7 @@ pub fn load_custom_client() {
     }
     let Some(path) = std::env::current_exe().map_or(None, |x| x.parent().map(|x| x.to_path_buf()))
     else {
+        apply_default_builtin_server();
         return;
     };
     #[cfg(target_os = "macos")]
@@ -2099,6 +2100,25 @@ pub fn load_custom_client() {
             return;
         };
         read_custom_client(&data.trim());
+    } else {
+        apply_default_builtin_server();
+    }
+}
+
+fn apply_default_builtin_server() {
+    let server = config::PROD_RENDEZVOUS_SERVER.read().unwrap().clone();
+    if !server.is_empty() {
+        config::DEFAULT_SETTINGS.write().unwrap().insert(
+            keys::OPTION_CUSTOM_RENDEZVOUS_SERVER.to_string(),
+            server,
+        );
+        let key = config::RS_PUB_KEY;
+        if !key.is_empty() {
+            config::DEFAULT_SETTINGS.write().unwrap().insert(
+                keys::OPTION_KEY.to_string(),
+                key.to_string(),
+            );
+        }
     }
 }
 
